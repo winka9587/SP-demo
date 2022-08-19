@@ -3,8 +3,8 @@
 
 ##Note
 
-¸ùÄ¿Â¼ÏÂÓÐÁ½¸ö.htmlÎÄ¼þ, ÆäÖÐindex.html×¨ÃÅÎªGithubPage ÐÞ¸ÄÁËjs°üµÄÂ·¾¶¡£ÒòÎªÏà¶ÔÂ·¾¶ÔÚÊ¹ÓÃES6Óï·¨µ¼Èë°üµÄÊ±ºò»áÓöµ½ÎÊÌâ£¬ÎÒ±ØÐëÏòÂ·¾¶ÖÐÌí¼ÓÏîÄ¿Ãû³Æ¡£
-Èç¹ûÏëÒªÔÚ±¾µØÔËÐÐÕâ¸ödemo£¬¿ÉÒÔÊ¹ÓÃsp-demo.html£¨´îÅäVSCodeµÄlive serverÀ©Õ¹ÄÜ¹»¿ìËÙÔËÐÐdemo£©
+æ ¹ç›®å½•ä¸‹æœ‰ä¸¤ä¸ª.htmlæ–‡ä»¶, å…¶ä¸­index.htmlä¸“é—¨ä¸ºGithubPage ä¿®æ”¹äº†jsåŒ…çš„è·¯å¾„ã€‚å› ä¸ºGitHubPageä½¿ç”¨ES6è¯­æ³•å¯¼å…¥åŒ…åœ¨ä½¿ç”¨ç›¸å¯¹è·¯å¾„åœ¨çš„æ—¶å€™ä¼šé‡åˆ°ä¸€ç‚¹é—®é¢˜ï¼Œå› æ­¤æˆ‘ç›´æŽ¥å‘è·¯å¾„ä¸­æ·»åŠ é¡¹ç›®åç§°ã€‚
+å¦‚æžœæƒ³è¦åœ¨æœ¬åœ°è¿è¡Œè¿™ä¸ªdemoï¼Œå¯ä»¥ä½¿ç”¨sp-demo.htmlï¼ˆæ­é…VSCodeçš„live serveræ‰©å±•èƒ½å¤Ÿå¿«é€Ÿè¿è¡Œdemoï¼‰
 
 visit Github Page to use this demo:
 
