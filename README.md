@@ -10,6 +10,10 @@ visit Github Page to use this demo:
 
 https://winka9587.github.io/SP-demo/
 
+click "run" to enjoy(or suffer)
+
+## about
+
 This is a sphereical pendulum simulation demo base on WebGL
 
 just change the wind, drag the ball and add friction coefficient
