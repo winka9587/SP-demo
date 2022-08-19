@@ -1,4 +1,6 @@
+
 # sphereical pendulum simulation(SP_Demo)
+
 ##Note
 
 根目录下有两个.html文件, 其中index.html专门为GithubPage 修改了js包的路径。因为相对路径在使用ES6语法导入包的时候会遇到问题，我必须向路径中添加项目名称。
