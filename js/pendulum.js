@@ -129,9 +129,9 @@ class Segment {
     
 
     step(time_step) {
-        console.log("时间节点1:"+getNowTime());
         //console.log("====segment step====");
-        console.log("theta:"+this.theta+" dtheta:"+this.dTheta+" phi:"+ this.phi+"dphi:"+this.dPhi);
+        //console.log("时间节点1:"+getNowTime());
+        //console.log("theta:"+this.theta+" dtheta:"+this.dTheta+" phi:"+ this.phi+"dphi:"+this.dPhi);
         // Calculate force, resulting from movement.
         let result = this.solver.solve(this.equation,//等式
                                 0, //

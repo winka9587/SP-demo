@@ -8,27 +8,14 @@
     <title>Demo</title>
 </head>
 <body>
-    <!--
-    <button id="ResetCamera">reset camera</button>
-    <button id="wind_button">wind</button>
-    
-    <input id="InputFile" type="file">
-    <div>
-        <a>读取的数据:</a>
+    <!-- <div id=control_part>
+        <input id="InputFile" type="file">
         <p id="DataList"></p>
-    </div>-->
-    <div id=control_part>
-        predict:<input id="InputFile" placeholder="test" type="file">
-        gt<input id="InputFile_gt" type="file">
-        avr<input id="InputFile_avr" type="file">
-        base<input id="InputFile_base" type="file">
-        <p id="DataList"></p>
-    </div>
+    </div> -->
 </body>
 </html>
 <script src="./js/jquery.js"></script>
 <script src="./js/jodex.js"></script>
-
 <script type="module">
 
     import * as THREE from '/js/three.js-master/build/three.module.js';
@@ -39,45 +26,22 @@
     import { GridHelper } from '/js/three.js-master/src/helpers/GridHelper.js';
     import { GUI } from '/js/three.js-master/examples/jsm/libs/dat.gui.module.js';
 
-    var inputfile_1_load = false;
-    var inputfile_1;
-    var inputPos_1 = [];
-    var inputPos_1_index = 0;
-
-    var inputfile_gt_load = false;
-    var inputfile_gt;
-    var inputPos_gt = [];
-    var inputPos_gt_index = 0;
-
-    var inputfile_avr_load = false;
-    var inputfile_avr;
-    var inputPos_avr = [];
-    var inputPos_avr_index = 0;
-
-    var inputfile_base_load = false;
-    var inputfile_base;
-    var inputPos_base = [];
-    var inputPos_base_index = 0;
-
     
-
-    //const LineLength = 0.52;//绳长
-    const LineLength = 0.77;//绳长
+    const LineLength = 0.52;//绳长
     const LineScale = 1;//绳长的缩放，为了显示时能够更清楚直观地看到轨迹
 
     //单摆的初始值
     const mass_initial = 1.0;
     const c_a_initial = 0;
-    const c_d_initial = 0.05;
+    const c_d_initial = 0.1;
     const wind_x_initial = 0;
     const wind_y_initial = 0;
     const wind_z_initial = 0;
-    const time_step_initial = 0.016;
+    const time_step_initial = 0.005;
     const is_record_path_initial = true;
-
     //起始位置
-    const theta_initial = 0.26359//0.8
-    const phi_initial = 3.75914;//0.7
+    const theta_initial = 0.8//0.8
+    const phi_initial = 0.7;//0.7
     const pendulum_param = {
         c_a:c_a_initial,
         c_d:c_d_initial,
@@ -92,7 +56,7 @@
 
     //基础场景组件
     const scene = new THREE.Scene();
-    const main_camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.0001, 1000000000);
+    const main_camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer(
         {
             antialias:true,
@@ -126,17 +90,7 @@
     let test_point = new THREE.Mesh( geometry_sphere, material_sphere2 );
     test_point.position.copy(new THREE.Vector3(0,0,0.1));
     scene.add( test_point );
-
-    const geometry_avr = new THREE.SphereGeometry( 2, 32, 32 );
-    const material_avr = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-    var ball_avr = new THREE.Mesh( geometry_avr, material_avr );
-
-    const geometry_base = new THREE.SphereGeometry( 2, 32, 32 );
-    const material_base = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-    var ball_base = new THREE.Mesh( geometry_base, material_base );
-
-    scene.add(ball_avr);
-    scene.add(ball_base);
+    
 
 
     //网格
@@ -161,28 +115,6 @@
     scene.add(drawline(new THREE.Vector3( 0 , 0 , 0 ),new THREE.Vector3( 0 , 100 , 0 ),coordinate_length,{color: 0xff0000}));//Y
     scene.add(drawline(new THREE.Vector3( 0 , 0 , 0 ),new THREE.Vector3( 0 , 0 , 100 ),coordinate_length,{color: 0x0000ff}));//Z
 
-    scene.add(drawline(
-                        new THREE.Vector3(54.7417942128158757,-622.7908410577074392,1019.5639505455328617),//base
-                        new THREE.Vector3( -2.78209026315789, 70.86203306140351, 617.2092456140352),//average point
-                        //-2.78209026315789, y: 70.86203306140351, z: 617.2092456140352,
-                        1,
-                        {color: 0x00ffff}));//gravity
-
-    //画不变base和变avr的连线
-    var gravity_by_avr_in_scene = new THREE.Group();;
-    scene.add(gravity_by_avr_in_scene);
-
-    //画变base和变avr的连线
-    var gravity_by_avr_in_scene2 = new THREE.Group();;
-    scene.add(gravity_by_avr_in_scene2);
-    // scene.add(drawline(
-    //                     new THREE.Vector3(54.7417942128158757,-622.7908410577074392,1019.5639505455328617),//base
-    //                     new THREE.Vector3( 54.7417942128158757-100*(-0.715506), -622.7908410577074392+100*(8.62795), 1019.5639505455328617+100*(-5.00466)),//average point
-    //                     //-2.78209026315789, y: 70.86203306140351, z: 617.2092456140352,
-    //                     1,
-    //                     {color: 0x00ffff}));//gravity
-                        
-                        
     //调整相机视角,z轴为up
     main_camera.position.x = 0.5;
     main_camera.position.y = 0.5;
@@ -213,11 +145,8 @@
 
     var is_record_path = is_record_path_initial;
     var history_path = [];//存储历史轨迹的数组
-    var gt_path = [];
-    
+    history_path.push(pendulum.segment.tail.position.multiplyScalar(LineScale).clone());
     const curve_material = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-    const curve_material2 = new THREE.LineBasicMaterial( { color : 0xffff00 } );
-    const curve_material3 = new THREE.LineBasicMaterial( { color : 0x00ff00 } );
     
     //gui
     const params = {
@@ -240,22 +169,10 @@
                 },
                 path_clear:function(){
                     path_in_scene.clear();
-                    //gt_path.clear();
                 },
                 reset_camera:function(){
                     //需要修改reset之后的control,先接触绑定之后,设定camera lookat ball,再重新绑定
-                    orbit_control.target = inputPos_1[0].clone();
-                    inputPos_1_index = 0;
-                },
-                reset2avr:function(){
-                    
-                    orbit_control.target = inputPos_avr[inputPos_1_index];
-                    
-                },
-                resume:function(){
-                    
-                    inputPos_1_index = 0;
-                    
+                    orbit_control.target = pendulum.segment.tail.position.clone();
                 },
                 change_speed:function(){
                     console.log("change speed");
@@ -268,9 +185,6 @@
                     console.log("segment.c_a:"+pendulum.segment.c_a);
                     console.log("segment.c_d:"+pendulum.segment.c_d);
                     console.log("segment.air:("+pendulum.segment.air.x+","+pendulum.segment.air.y+","+pendulum.segment.air.z+")");
-                    console.log("input:");
-                    console.log(inputfile_1);
-                    console.log(inputPos_1);
                 },
                 sample_x:0.1,
                 sample_y:0.1,
@@ -323,7 +237,7 @@
         console.log(pendulum.segment.air);
         pendulum.wind.setY(value);
     });;
-    gui.add( params, 'wind_z' ,-20,20).step(5).onChange(function(value){
+    gui.add( params, 'wind_z' ,-2000,2000).step(5).onChange(function(value){
         console.log("wind z change");
         console.log(pendulum.wind);
         console.log(pendulum.segment.air);
@@ -332,9 +246,6 @@
     gui.add( params, 'wind_clear' );
     gui.add( params, 'path_clear' );
     gui.add( params, 'reset_camera' );
-    gui.add( params, 'reset2avr' );
-    gui.add( params, 'resume' );
-    
     gui.add( params, 'change_speed' );
     gui.add( params, 'print_log' );
     gui.add( params, 'sample_x',0).onChange( function ( value ) {
@@ -351,32 +262,13 @@
     
     var last_phi,last_theta;
     //上次位置,用于画轨迹
-    var last_pos_input_1;
-    var last_pos_input_gt;
-
-    if(inputfile_1_load){
-        var last_pos_input_1 = inputPos_1[inputPos_1_index];
-    }
-    if(inputfile_gt_load){
-        var last_pos_input_gt = inputPos_gt[inputPos_1_index];
-    }
-
     var last_pos = pendulum.segment.tail.position.clone();
-
-    var last_direction = new THREE.Vector3();//记录上次的方向
-
-    var vector_g = new THREE.Vector3(0,0,0);
-
-    var predict_start = 570;
-    var predict_end = 570+50;
-
     //循环
     function animate() {
         requestAnimationFrame(animate);
         
         
         if(go){
-            console.log(pendulum.segment.tail.position.x+","+pendulum.segment.tail.position.y+","+pendulum.segment.tail.position.z);
             //输出摆球坐标
             // console.log("pos:("+ pendulum.segment.tail.position.x + ","
             //                     + pendulum.segment.tail.position.y + ","
@@ -426,156 +318,21 @@
             points.push(pendulum.segment.tail.position);
             pendulum_line.geometry.setFromPoints( points );
 
-            
-
             //轨迹更新
             if(is_record_path){
-                inputPos_1_index++;
-            //if(!last_pos.equals(pendulum.segment.tail.position)){
-            //        history_path.push(pendulum.segment.tail.position.clone());
-            //        last_pos = pendulum.segment.tail.position.clone();
-            if(!last_pos.equals(pendulum.segment.tail.position)){//为了控制timestep，防止刷新过快导致看不到运动过程
-                    console.log("frame:"+inputPos_1_index);
-                    if(inputPos_1_index<inputPos_1.length){
-                        if(inputfile_gt_load){
-                            gt_path.push(inputPos_gt[inputPos_1_index].clone());//
-                            last_pos_input_gt = inputPos_gt[inputPos_1_index].clone();
-                        }
+                if(!last_pos.equals(pendulum.segment.tail.position)){
+                    history_path.push(pendulum.segment.tail.position.clone());
+                    last_pos = pendulum.segment.tail.position.clone();
 
-                        if(inputfile_1_load){
-                            history_path.push(inputPos_1[inputPos_1_index].clone());
-                            last_pos_input_1 = inputPos_1[inputPos_1_index].clone();
-                        }
-
-                        last_pos = pendulum.segment.tail.position.clone();
-
-
-                        //这段代码能够帮助寻找转折点
-                        //let limit = Math.PI/5; 
-                        //let now_direction = new THREE.Vector3();
-                        //now_direction.subVectors(inputPos_1[inputPos_1_index],inputPos_1[inputPos_1_index-1]);
-                        //计算向量之间的夹角
-                        // let angle = last_direction.angleTo(now_direction);      
-                        // console.log(angle+" vs "+ limit);
-                        // if(angle>limit){
-                        //     alert("turn at frame:"+inputPos_1_index);
-                        // }
-                        // last_direction = now_direction.clone();
-
-                        //计算g
-                        //[31,144]
-                        if( inputPos_1_index > 30 && inputPos_1_index < 145 ){
-                            vector_g.add(inputPos_1[inputPos_1_index]);
-                        }
-                        if(inputPos_1_index==145){
-                            vector_g.divideScalar(114);
-                            console.log(vector_g);
-                            //alert("get average point");//用这个点减去摆点M
-                        }
-                    }
                     if(history_path.length>6){
-
-                        //绘制历史轨迹
                         var curve = new THREE.CatmullRomCurve3( history_path );
-                                var curve_points = curve.getPoints( history_path.length*50 );
-                                const curve_geometry = new THREE.BufferGeometry().setFromPoints( curve_points );
-                                let curveObject;
-                                if( inputPos_1_index > predict_start && inputPos_1_index < predict_end ){
-                                    curveObject = new THREE.Line( curve_geometry, curve_material2 );
-                                }else if(inputPos_1_index >= predict_end){
-                                    curveObject = new THREE.Line( curve_geometry, curve_material3 );
-                                }else{
-                                    //一般情况
-                                    curveObject = new THREE.Line( curve_geometry, curve_material );
-                                }
-                                
-                                path_in_scene.add(curveObject);
-                                
-                                history_path = [];//清空数组
-                                history_path.push(last_pos_input_1.clone());//否则曲线与曲线之间会不连续
-
-
-                        //绘制predict曲线
-                        if(inputPos_1_index<inputPos_1.length){
-                            if(inputfile_1_load){
-                                var curve = new THREE.CatmullRomCurve3( history_path );
-                                var curve_points = curve.getPoints( history_path.length*50 );
-                                const curve_geometry = new THREE.BufferGeometry().setFromPoints( curve_points );
-                                let curveObject;
-                                if( inputPos_1_index > predict_start && inputPos_1_index < predict_end ){
-                                    curveObject = new THREE.Line( curve_geometry, curve_material2 );
-                                }else if(inputPos_1_index >= predict_end){
-                                    curveObject = new THREE.Line( curve_geometry, curve_material3 );
-                                }else{
-                                    //一般情况
-                                    curveObject = new THREE.Line( curve_geometry, curve_material );
-                                }
-                                
-                                path_in_scene.add(curveObject);
-                                
-                                history_path = [];//清空数组
-                                history_path.push(last_pos_input_1.clone());//否则曲线与曲线之间会不连续
-                            }
-                            //绘制gt
-                            if(inputfile_gt_load){
-                                var curve_gt = new THREE.CatmullRomCurve3( gt_path );
-                                var curve_points_gt = curve_gt.getPoints( gt_path.length*50 );
-                                const curve_geometry_gt = new THREE.BufferGeometry().setFromPoints( curve_points_gt );
-                                
-                                let curve_material_gt;
-                                if(inputPos_1_index > predict_start && inputPos_1_index < predict_end ){
-                                    //用来和预测比较
-                                    curve_material_gt = new THREE.LineBasicMaterial( { color : 0x00ff33 } );         
-                                }else{
-                                    curve_material_gt = new THREE.LineBasicMaterial( { color : "#D4D4D4" } );      
-                                }
-
-                                let curveObject_gt = new THREE.Line( curve_geometry_gt, curve_material_gt );
-                                0x66ff33
-                                path_in_scene.add(curveObject_gt);
-                                
-                                gt_path = [];//清空数组
-                                gt_path.push(last_pos_input_gt.clone());//否则曲线与曲线之间会不连续
-                            }
-                        }
-                        //显示point average
-                        if(inputfile_avr_load && inputPos_avr_index<inputPos_avr.length){
-                            console.log(ball_avr);
-                            //ball_avr.position = inputPos_avr[inputPos_avr_index].clone();
-                            ball_avr.position.set(inputPos_avr[inputPos_avr_index].x,inputPos_avr[inputPos_avr_index].y,inputPos_avr[inputPos_avr_index].z);
-                            inputPos_avr_index++;
-
-                            gravity_by_avr_in_scene.clear();
-                            gravity_by_avr_in_scene.add(
-                                drawline(
-                                        new THREE.Vector3(54.7417942128158757,-622.7908410577074392,1019.5639505455328617),//base
-                                        new THREE.Vector3( inputPos_avr[inputPos_avr_index].x,inputPos_avr[inputPos_avr_index].y,inputPos_avr[inputPos_avr_index].z),//average point
-                                        //-2.78209026315789, y: 70.86203306140351, z: 617.2092456140352,
-                                        1,
-                                        {color: 0x00ff00}
-                                    )
-                                );//gravity
-                            
-                        }
-                        //显示base
-                        if(inputfile_base_load&&inputPos_base_index<inputPos_base.length){
-                            console.log(ball_base);
-                            //ball_avr.position = inputPos_avr[inputPos_avr_index].clone();
-                            ball_base.position.set(inputPos_base[inputPos_base_index].x,inputPos_base[inputPos_base_index].y,inputPos_base[inputPos_base_index].z);
-                            inputPos_base_index++;
-
-                            gravity_by_avr_in_scene2.clear();
-                            gravity_by_avr_in_scene2.add(
-                                drawline(
-                                        new THREE.Vector3(inputPos_base[inputPos_base_index].x,inputPos_base[inputPos_base_index].y,inputPos_base[inputPos_base_index].z),//base
-                                        new THREE.Vector3( inputPos_avr[inputPos_avr_index].x,inputPos_avr[inputPos_avr_index].y,inputPos_avr[inputPos_avr_index].z),//average point
-                                        //-2.78209026315789, y: 70.86203306140351, z: 617.2092456140352,
-                                        1,
-                                        {color: 0xff33ff}
-                                    )
-                                );//gravity
-                            
-                        }
+                        var curve_points = curve.getPoints( history_path.length*50 );
+                        const curve_geometry = new THREE.BufferGeometry().setFromPoints( curve_points );
+                        const curveObject = new THREE.Line( curve_geometry, curve_material );
+                        path_in_scene.add(curveObject);
+                        
+                        history_path = [];//清空数组
+                        history_path.push(last_pos.clone());//否则曲线与曲线之间会不连续
                     }
                     
                 }
@@ -602,7 +359,6 @@
             wind_open = false;
         }
         console.log(pendulum.wind);
-        
     }
     
     //将笛卡尔坐标系xyz转换到拉格朗日坐标
@@ -707,137 +463,31 @@
     } )
 
     
-    function handleInput(value,index,array){
-        array[index] = parseFloat(value);
-    }
+    // $(document).ready(function () {
 
-    $(document).ready(function () {
+    //     //显示读取数据
+    //     $("#InputFile").on('change', function (source) {
+    //         let file = source.target.files[0];
+    //         let reader = new FileReader();
+    //         reader.onload = function (e) {
+    //             // console.log(e.target.result);
+    //             let str = e.target.result;
+    //             // console.log(str);
+    //             str.split(' ');
+    //             $("#DataList").append(str);
+    //         }
+    //         reader.readAsText(file);
 
-        //显示读取数据
-        $("#InputFile").on('change', function (source) {
-            let file = source.target.files[0];
-            let reader = new FileReader();
-            //当加载文件时触发
-            reader.onload = function (e) {
-                // console.log(e.target.result);
-                let str = e.target.result;
-                
-                // console.log(str);
-                $("#DataList").append("loaded path\n");
+    //     });
+    //     //重置视角
+    //     $("#ResetCamera").on('click',function(source){
+    //         orbit_control.target = pendulum.segment.tail.position.clone();
+    //     });
+    //     //测试wind输出
+    //     $("#wind_button").on('click',click_test);
+    //     //默认有wind
+    //     //$("#wind_button").click();
 
-                inputfile_1 = e.target.result;
-                inputfile_1 = inputfile_1.split(/\s+/);
-                inputfile_1.forEach(handleInput);
-                let scale_ = 1;
-                for(let i=0;i<inputfile_1.length;i=i+3){
-                    inputPos_1.push(new THREE.Vector3(inputfile_1[i]*scale_, inputfile_1[i+1]*scale_, inputfile_1[i+2]*scale_));
-                }
-
-                history_path.push(inputPos_1[inputPos_1_index].clone());
-
-                
-
-                console.log("file load end");
-                console.log(inputPos_1);
-                console.log(history_path)
-                orbit_control.target = inputPos_1[0].clone();
-
-                last_direction.subVectors(inputPos_1[1],inputPos_1[0]);//用于寻找拐点（最高点）
-            }
-            reader.readAsText(file);//加载
-
-            
-            console.log("last_direction");
-            console.log(last_direction);
-            inputfile_1_load = true;
-        });
-
-        //读取gt
-        $("#InputFile_gt").on('change', function (source) {
-            let file = source.target.files[0];
-            let reader = new FileReader();
-            //当加载文件时触发
-            reader.onload = function (e) {
-                // console.log(e.target.result);
-                let str = e.target.result;
-                
-                // console.log(str);
-                $("#DataList").append("loaded path\n");
-
-                inputfile_gt = e.target.result;
-                inputfile_gt = inputfile_gt.split(/\s+/);
-                inputfile_gt.forEach(handleInput);
-                let scale_ = 1;
-                for(let i=0;i<inputfile_gt.length;i=i+3){
-                    inputPos_gt.push(new THREE.Vector3(inputfile_gt[i]*scale_, inputfile_gt[i+1]*scale_, inputfile_gt[i+2]*scale_));
-                }
-
-                gt_path.push(inputPos_gt[inputPos_gt_index].clone());
-            }
-            reader.readAsText(file);//加载
-            inputfile_gt_load = true;
-
-        });
-
-        //读取平均点
-        $("#InputFile_avr").on('change', function (source) {
-            let file = source.target.files[0];
-            let reader = new FileReader();
-            //当加载文件时触发
-            reader.onload = function (e) {
-                // console.log(e.target.result);
-                let str = e.target.result;
-                
-                // console.log(str);
-                $("#DataList").append("loaded average p\n");
-
-                inputfile_avr = e.target.result;
-                inputfile_avr = inputfile_avr.split(/\s+/);
-                inputfile_avr.forEach(handleInput);
-                let scale_ = 1;
-                for(let i=0;i<inputfile_avr.length;i=i+3){
-                    inputPos_avr.push(new THREE.Vector3(inputfile_avr[i]*scale_, inputfile_avr[i+1]*scale_, inputfile_avr[i+2]*scale_));
-                }
-
-            }
-            reader.readAsText(file);//加载
-            inputfile_avr_load = true;
-        });
-
-        //读取base
-        $("#InputFile_base").on('change', function (source) {
-            let file = source.target.files[0];
-            let reader = new FileReader();
-            //当加载文件时触发
-            reader.onload = function (e) {
-                // console.log(e.target.result);
-                let str = e.target.result;
-                
-                // console.log(str);
-                $("#DataList").append("loaded base\n");
-
-                inputfile_base = e.target.result;
-                inputfile_base = inputfile_base.split(/\s+/);
-                inputfile_base.forEach(handleInput);
-                let scale_ = 1;
-                for(let i=0;i<inputfile_base.length;i=i+3){
-                    inputPos_base.push(new THREE.Vector3(inputfile_base[i]*scale_, inputfile_base[i+1]*scale_, inputfile_base[i+2]*scale_));
-                }
-
-            }
-            reader.readAsText(file);//加载
-            inputfile_base_load = true;
-        });
-
-        //重置视角
-        $("#ResetCamera").on('click',function(source){
-            orbit_control.target = inputPos_1[0].clone();
-        });
-        //测试wind输出
-        $("#wind_button").on('click',click_test);
-        //默认有wind
-        //$("#wind_button").click();
-
-    });
+    // });
 
 </script>
